@@ -4,7 +4,7 @@ import { Input } from './ui/input';
 import { Label } from './ui/label';
 import { Button } from './ui/button';
 import { User, UserType } from '../types/parking';
-import { GraduationCap } from 'lucide-react';
+import { Car, MapPin } from 'lucide-react';
 
 interface LoginScreenProps {
   onLogin: (user: User) => void;
@@ -33,8 +33,9 @@ export function LoginScreen({ onLogin, onCreateAccount }: LoginScreenProps) {
     <div className="min-h-screen bg-gray-50 flex items-center justify-center p-4">
       <div className="w-full max-w-md">
         <div className="text-center mb-8">
-          <div className="bg-blue-500 w-20 h-20 rounded-[22px] flex items-center justify-center mx-auto mb-4 shadow-lg">
-            <GraduationCap className="w-11 h-11 text-white" strokeWidth={2} />
+          <div className="bg-blue-500 w-20 h-20 rounded-[22px] flex items-center justify-center mx-auto mb-4 shadow-lg relative">
+            <MapPin className="absolute top-3 left-4 w-6 h-6 text-white opacity-50" strokeWidth={2} />
+            <Car className="w-9 h-9 text-white" strokeWidth={2} fill="white" />
           </div>
           <h1 className="text-[28px] tracking-tight mb-1">University Parking</h1>
           <p className="text-[15px] text-gray-500">Reservation System</p>
