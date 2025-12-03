@@ -2,8 +2,17 @@ import { IOSHeader } from './IOSHeader';
 import { Card } from './ui/card';
 import { Button } from './ui/button';
 import { Reservation } from '../types/parking';
-import { MapPin, Clock, QrCode, AlertCircle } from 'lucide-react';
+import { MapPin, Clock, QrCode, AlertCircle, Edit2, X } from 'lucide-react';
 import { QRCodeSVG } from 'qrcode.react';
+import { useState } from 'react';
+import { Label } from './ui/label';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from './ui/select';
 
 interface ManageReservationScreenProps {
   onBack: () => void;
@@ -11,9 +20,94 @@ interface ManageReservationScreenProps {
   onCancel: () => void;
   onSimulateEntry?: () => void;
   onSimulateExit?: () => void;
+  onUpdateReservation?: (startTime: Date, endTime: Date) => void;
 }
 
-export function ManageReservationScreen({ onBack, reservation, onCancel, onSimulateEntry, onSimulateExit }: ManageReservationScreenProps) {
+export function ManageReservationScreen({ 
+  onBack, 
+  reservation, 
+  onCancel, 
+  onSimulateEntry, 
+  onSimulateExit,
+  onUpdateReservation 
+}: ManageReservationScreenProps) {
+  const [isEditing, setIsEditing] = useState(false);
+  const [startHour, setStartHour] = useState('');
+  const [startMinute, setStartMinute] = useState('00');
+  const [startPeriod, setStartPeriod] = useState('AM');
+  const [endHour, setEndHour] = useState('');
+  const [endMinute, setEndMinute] = useState('00');
+  const [endPeriod, setEndPeriod] = useState('PM');
+
+  // Generate time options
+  const hours = ['01', '02', '03', '04', '05', '06', '07', '08', '09', '10', '11', '12'];
+  const minutes = ['00', '15', '30', '45'];
+
+  const convertTo24Hour = (hour: string, minute: string, period: string) => {
+    let hour24 = parseInt(hour);
+    if (period === 'PM' && hour24 !== 12) {
+      hour24 += 12;
+    } else if (period === 'AM' && hour24 === 12) {
+      hour24 = 0;
+    }
+    return { hour24, minute };
+  };
+
+  const convertFrom24Hour = (date: Date) => {
+    let hour = date.getHours();
+    const minute = date.getMinutes();
+    const period = hour >= 12 ? 'PM' : 'AM';
+    
+    if (hour === 0) {
+      hour = 12;
+    } else if (hour > 12) {
+      hour = hour - 12;
+    }
+    
+    return {
+      hour: hour.toString().padStart(2, '0'),
+      minute: minute.toString().padStart(2, '0'),
+      period
+    };
+  };
+
+  const handleEdit = () => {
+    if (reservation) {
+      const start = convertFrom24Hour(new Date(reservation.startTime));
+      const end = convertFrom24Hour(new Date(reservation.endTime));
+      
+      setStartHour(start.hour);
+      setStartMinute(start.minute);
+      setStartPeriod(start.period);
+      setEndHour(end.hour);
+      setEndMinute(end.minute);
+      setEndPeriod(end.period);
+      setIsEditing(true);
+    }
+  };
+
+  const handleSaveEdit = () => {
+    if (!reservation || !onUpdateReservation) return;
+
+    const startConverted = convertTo24Hour(startHour, startMinute, startPeriod);
+    const endConverted = convertTo24Hour(endHour, endMinute, endPeriod);
+    
+    // Create new Date objects with today's date and the selected times
+    const today = new Date(reservation.startTime);
+    const newStartTime = new Date(today);
+    newStartTime.setHours(startConverted.hour24, parseInt(startConverted.minute), 0, 0);
+    
+    const newEndTime = new Date(today);
+    newEndTime.setHours(endConverted.hour24, parseInt(endConverted.minute), 0, 0);
+    
+    onUpdateReservation(newStartTime, newEndTime);
+    setIsEditing(false);
+  };
+
+  const handleCancelEdit = () => {
+    setIsEditing(false);
+  };
+
   if (!reservation) {
     return (
       <div className="min-h-screen bg-gray-50">
@@ -158,8 +252,137 @@ export function ManageReservationScreen({ onBack, reservation, onCancel, onSimul
           </Card>
         )}
 
-        {/* Cancel Button */}
-        {(reservation.status === 'pending' || reservation.status === 'started') && (
+        {/* Edit Reservation */}
+        {reservation.status === 'pending' && onUpdateReservation && (
+          <Card className="p-4 rounded-[14px] border-0 shadow-sm">
+            {!isEditing ? (
+              <>
+                <p className="text-[13px] text-gray-500 uppercase tracking-wide mb-3">
+                  Edit Reservation
+                </p>
+                <Button
+                  onClick={handleEdit}
+                  className="w-full h-12 bg-blue-500 hover:bg-blue-600 text-[17px] rounded-[10px] flex items-center justify-center gap-2"
+                >
+                  <Edit2 className="w-5 h-5" />
+                  Edit Time
+                </Button>
+              </>
+            ) : (
+              <>
+                <div className="flex items-center justify-between mb-4">
+                  <p className="text-[13px] text-gray-500 uppercase tracking-wide">
+                    Edit Reservation
+                  </p>
+                  <button
+                    onClick={handleCancelEdit}
+                    className="p-1 hover:bg-gray-100 rounded-full transition-colors"
+                  >
+                    <X className="w-5 h-5 text-gray-500" />
+                  </button>
+                </div>
+                <div className="space-y-4">
+                  <div className="space-y-2">
+                    <Label className="text-[13px] text-gray-600 uppercase tracking-wide">
+                      Start Time
+                    </Label>
+                    <div className="grid grid-cols-3 gap-2">
+                      <Select value={startHour} onValueChange={setStartHour}>
+                        <SelectTrigger className="h-11 text-[17px] rounded-[10px] border-gray-300">
+                          <SelectValue placeholder="Hour" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {hours.map((hour) => (
+                            <SelectItem key={hour} value={hour} className="text-[17px]">
+                              {hour}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+
+                      <Select value={startMinute} onValueChange={setStartMinute}>
+                        <SelectTrigger className="h-11 text-[17px] rounded-[10px] border-gray-300">
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {minutes.map((minute) => (
+                            <SelectItem key={minute} value={minute} className="text-[17px]">
+                              {minute}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+
+                      <Select value={startPeriod} onValueChange={setStartPeriod}>
+                        <SelectTrigger className="h-11 text-[17px] rounded-[10px] border-gray-300">
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="AM" className="text-[17px]">AM</SelectItem>
+                          <SelectItem value="PM" className="text-[17px]">PM</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label className="text-[13px] text-gray-600 uppercase tracking-wide">
+                      End Time
+                    </Label>
+                    <div className="grid grid-cols-3 gap-2">
+                      <Select value={endHour} onValueChange={setEndHour}>
+                        <SelectTrigger className="h-11 text-[17px] rounded-[10px] border-gray-300">
+                          <SelectValue placeholder="Hour" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {hours.map((hour) => (
+                            <SelectItem key={hour} value={hour} className="text-[17px]">
+                              {hour}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+
+                      <Select value={endMinute} onValueChange={setEndMinute}>
+                        <SelectTrigger className="h-11 text-[17px] rounded-[10px] border-gray-300">
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {minutes.map((minute) => (
+                            <SelectItem key={minute} value={minute} className="text-[17px]">
+                              {minute}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+
+                      <Select value={endPeriod} onValueChange={setEndPeriod}>
+                        <SelectTrigger className="h-11 text-[17px] rounded-[10px] border-gray-300">
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="AM" className="text-[17px]">AM</SelectItem>
+                          <SelectItem value="PM" className="text-[17px]">PM</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                  </div>
+
+                  <Button
+                    onClick={handleSaveEdit}
+                    className="w-full h-12 bg-green-500 hover:bg-green-600 text-[17px] rounded-[10px]"
+                    disabled={!startHour || !endHour}
+                  >
+                    Save Changes
+                  </Button>
+                </div>
+              </>
+            )}
+          </Card>
+        )}
+
+        {/* Cancel Button - Only show when status is 'pending' */}
+        {reservation.status === 'pending' && (
           <Button
             onClick={onCancel}
             variant="outline"
