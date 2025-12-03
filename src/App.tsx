@@ -71,6 +71,14 @@ function App() {
 
   const handleNavigate = (screen: string) => {
     if (screen === 'book') {
+      // Check if user already has an active reservation
+      if (activeReservation) {
+        toast.error('Active Reservation Exists', {
+          description: 'You already have an active reservation. Please complete or cancel it before making a new booking.',
+          duration: 5000,
+        });
+        return;
+      }
       setCurrentScreen('book');
     } else if (screen === 'manage') {
       setCurrentScreen('manage');
