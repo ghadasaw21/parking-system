@@ -6,7 +6,7 @@ export interface User {
   universityId: string;
   phoneNumber: string;
   userType: UserType;
-  freeHours: number; // 2 for student/gp_student, 8 for staff
+  freeHours: number; // 2 for student, 3 for gp_student, 8 for staff
   classSchedule?: ClassSchedule[]; // For students only
 }
 
