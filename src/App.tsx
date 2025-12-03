@@ -201,6 +201,19 @@ function App() {
     }
   };
 
+  const handleUpdateReservation = (startTime: Date, endTime: Date) => {
+    if (activeReservation) {
+      setReservations(prev =>
+        prev.map(r =>
+          r.id === activeReservation.id
+            ? { ...r, startTime, endTime }
+            : r
+        )
+      );
+      toast.success('Reservation updated successfully');
+    }
+  };
+
   return (
     <>
       <div className="max-w-[430px] mx-auto bg-white min-h-screen shadow-2xl">
@@ -262,6 +275,7 @@ function App() {
             onCancel={handleCancelReservation}
             onSimulateEntry={() => handleEntryScanned('mock')}
             onSimulateExit={() => handleExitScanned('mock')}
+            onUpdateReservation={handleUpdateReservation}
           />
         )}
 
