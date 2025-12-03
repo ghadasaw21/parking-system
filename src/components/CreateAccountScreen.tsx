@@ -20,7 +20,7 @@ export function CreateAccountScreen({ onBack, onVerify }: CreateAccountScreenPro
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    const freeHours = userType === 'staff' ? 8 : 2;
+    const freeHours = userType === 'staff' ? 8 : userType === 'gp_student' ? 3 : 2;
     const newUser: User = {
       id: crypto.randomUUID(),
       fullName,
@@ -34,7 +34,7 @@ export function CreateAccountScreen({ onBack, onVerify }: CreateAccountScreenPro
 
   const userTypes = [
     { value: 'student', label: 'Student', hours: 2 },
-    { value: 'gp_student', label: 'GP Student', hours: 2 },
+    { value: 'gp_student', label: 'GP Student', hours: 3 },
     { value: 'staff', label: 'Staff', hours: 8 },
   ];
 
